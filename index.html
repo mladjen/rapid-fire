@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f2e7cf" />
+<title>Rapid Fire — Lightning Round</title>
+<style>
+  :root{
+    --paper:#f2e7cf;      /* studio cream */
+    --paper2:#e7d7b3;     /* panel / dots */
+    --ink:#241d16;        /* warm near-black */
+    --ink2:#7a6a52;       /* muted brown */
+    --red:#df4a26;        /* signal red-orange */
+    --teal:#0e8f82;       /* correct */
+    --gold:#f2b01e;       /* highlight / pass */
+    --miss:#c23a22;
+    --go:#0e8f82;
+    --disp:"Arial Black","Arial Bold",Impact,Haettenschweiler,system-ui,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono","SFMono-Regular","Courier New",monospace;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --hard:6px 6px 0 var(--ink);
+    --hard-sm:4px 4px 0 var(--ink);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);font-family:var(--body);
+    background:
+      radial-gradient(var(--paper2) 1.5px, transparent 1.6px) 0 0/22px 22px,
+      var(--paper);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;touch-action:manipulation;
+    user-select:none;-webkit-user-select:none;
+  }
+  #app{height:100dvh;display:flex;align-items:center;justify-content:center;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+  .screen{width:100%;max-width:540px;height:100%;max-height:880px;
+    display:flex;flex-direction:column;animation:fade .3s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .hidden{display:none !important}
+
+  /* ---------- Start screen ---------- */
+  .brand{text-align:center;margin-top:4vh}
+  .kicker{display:inline-block;font-family:var(--mono);font-weight:700;font-size:12px;
+    letter-spacing:.34em;text-transform:uppercase;color:var(--ink);
+    background:var(--gold);border:2.5px solid var(--ink);padding:5px 12px 4px 16px;
+    box-shadow:var(--hard-sm);transform:rotate(-1.5deg)}
+  .spark{font-size:34px;line-height:1;margin-top:14px}
+  h1{font-family:var(--disp);font-size:clamp(46px,14vw,72px);margin:2px 0 6px;
+    text-transform:uppercase;letter-spacing:-.01em;line-height:.92;color:var(--ink);
+    text-shadow:4px 4px 0 var(--red)}
+  .tag{font-family:var(--mono);color:var(--ink2);font-size:13px;margin:0;letter-spacing:.02em}
+  .tag b{color:var(--red)}
+
+  .rules{background:var(--paper);border:3px solid var(--ink);border-radius:16px;
+    padding:18px 18px 8px;margin:20px 0 auto;box-shadow:var(--hard)}
+  .rules h2{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--ink2);margin:0 0 14px}
+  .rule{display:flex;gap:13px;align-items:flex-start;margin-bottom:15px;font-size:14.5px;line-height:1.4}
+  .rule .n{flex:0 0 28px;height:28px;display:grid;place-items:center;font-family:var(--disp);font-size:15px;
+    background:var(--red);color:var(--paper);border:2.5px solid var(--ink);border-radius:7px;transform:rotate(-2deg)}
+  .rule b{color:var(--ink);font-weight:800}
+  .em{background:var(--gold);color:var(--ink);font-weight:800;padding:0 4px;
+    box-decoration-break:clone;-webkit-box-decoration-break:clone}
+
+  .opts{display:flex;flex-direction:column;gap:12px;margin:18px 0}
+  .opt{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:11px 13px;box-shadow:var(--hard-sm)}
+  .opt .lab{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+  .seg{display:flex;gap:0;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden}
+  .seg button{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;font-weight:700;
+    padding:10px 6px;cursor:pointer;transition:.12s;border-left:2.5px solid var(--ink)}
+  .seg button:first-child{border-left:0}
+  .seg button small{font-weight:600;color:var(--ink2)}
+  .seg button.on{background:var(--ink);color:var(--paper)}
+  .seg button.on small{color:var(--paper);opacity:.7}
+
+  .btn{border:3px solid var(--ink);cursor:pointer;font-family:var(--disp);text-transform:uppercase;
+    letter-spacing:.01em;border-radius:14px;padding:17px;font-size:20px;width:100%;
+    box-shadow:var(--hard);transition:transform .07s ease, box-shadow .07s ease}
+  .btn:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+  .btn-primary{background:var(--red);color:var(--paper)}
+  .btn-ghost{background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:800;
+    text-transform:none;font-size:15px;padding:13px;margin-top:12px;box-shadow:var(--hard-sm)}
+  .btn-ghost.live{background:var(--teal);color:var(--paper)}
+
+  /* ---------- Play screen (control) ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .runlabel{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+  .runlabel b{color:var(--red);font-weight:700}
+  .link{display:flex;align-items:center;gap:8px}
+  .boarddot{width:9px;height:9px;background:var(--paper);border:2px solid var(--ink)}
+  .boarddot.on{background:var(--teal)}
+  .timer{font-family:var(--disp);font-size:24px;padding:5px 14px;border:3px solid var(--ink);border-radius:10px;
+    background:var(--paper);min-width:66px;text-align:center;box-shadow:var(--hard-sm)}
+  .timer.warn{background:var(--gold)}
+  .timer.crit{background:var(--red);color:var(--paper);animation:pulse .9s infinite}
+  @keyframes pulse{50%{opacity:.55}}
+
+  .dots{display:flex;gap:7px;justify-content:center;margin:0 0 10px;flex-wrap:wrap}
+  .dot{width:24px;height:11px;border:2px solid var(--ink);background:var(--paper);transition:.15s}
+  .dot.go{background:var(--teal)}
+  .dot.miss{background:var(--red)}
+  .dot.cur{background:var(--gold);transform:translateY(-2px)}
+
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:0}
+  .cardword{width:100%;background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:36px 22px;
+    box-shadow:var(--hard);display:flex;flex-direction:column;align-items:center;gap:12px;position:relative}
+  .cardword::before{content:"";position:absolute;left:0;right:0;top:64px;height:0;
+    border-top:2.5px dashed var(--ink);opacity:.28}
+  .letter{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.28em;color:var(--red);text-transform:uppercase}
+  .word{font-family:var(--disp);font-size:clamp(42px,13vw,66px);letter-spacing:-.01em;line-height:1;color:var(--ink);
+    text-shadow:3px 3px 0 var(--red)}
+  .idx{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+  .flash{animation:flash .4s ease}
+  @keyframes flash{0%{transform:scale(1)}40%{transform:scale(1.035) rotate(-.4deg)}100%{transform:scale(1)}}
+
+  .controls{display:flex;gap:14px;margin-top:16px}
+  .ctrl{flex:1;border:3px solid var(--ink);cursor:pointer;font-family:var(--disp);text-transform:uppercase;
+    font-size:19px;border-radius:16px;padding:19px 12px;box-shadow:var(--hard);
+    transition:transform .07s, box-shadow .07s;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ctrl:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+  .ctrl small{font-family:var(--mono);font-weight:600;font-size:10.5px;text-transform:none;letter-spacing:.02em;opacity:.75}
+  .ctrl-pass{background:var(--gold);color:var(--ink)}
+  .ctrl-go{background:var(--teal);color:var(--paper)}
+  .endnow{background:none;border:0;color:var(--ink2);font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;margin-top:14px;cursor:pointer;text-decoration:underline;align-self:center}
+
+  /* ---------- End screen (control) ---------- */
+  .scorewrap{text-align:center;margin-top:4vh}
+  .scorewrap .big{font-family:var(--disp);font-size:clamp(90px,30vw,150px);line-height:.9;color:var(--teal);
+    text-shadow:5px 5px 0 var(--ink)}
+  .scorewrap .of{font-family:var(--mono);color:var(--ink2);font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin-top:6px}
+  .scoremsg{font-family:var(--disp);text-transform:uppercase;font-size:22px;margin-top:12px;color:var(--ink)}
+  .recap{background:var(--paper);border:3px solid var(--ink);border-radius:16px;margin:20px 0 auto;padding:6px 10px;
+    overflow-y:auto;box-shadow:var(--hard)}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 4px}
+  .row+.row{border-top:2px dashed var(--ink);border-color:color-mix(in srgb,var(--ink) 28%,transparent)}
+  .row .mk{width:26px;height:26px;display:grid;place-items:center;font-family:var(--disp);font-size:14px;
+    border:2.5px solid var(--ink);border-radius:6px;flex:0 0 26px}
+  .row.g .mk{background:var(--teal);color:var(--paper)}
+  .row.m .mk{background:var(--red);color:var(--paper)}
+  .row .w{font-weight:800;font-size:17px;flex:1;text-align:left;color:var(--ink)}
+  .row.m .w{color:var(--ink2)}
+  .row .l{font-family:var(--mono);color:var(--ink2);font-size:13px;font-weight:700;letter-spacing:.08em}
+  .footer{text-align:center;color:var(--ink2);font-family:var(--mono);font-size:11px;letter-spacing:.06em;margin-top:14px}
+  .kbd{display:none}
+  @media(pointer:fine){.kbd{display:block}}
+  #start{overflow-y:auto;overflow-x:hidden;padding:0 10px;scrollbar-gutter:stable both-edges}
+
+  /* ---------- sunburst rays (board + countdown) ---------- */
+  .rays{position:absolute;inset:0;margin:auto;width:min(125vmin,940px);height:min(125vmin,940px);
+    background:repeating-conic-gradient(var(--gold) 0deg 9deg, transparent 9deg 18deg);
+    opacity:.22;z-index:0;pointer-events:none;
+    -webkit-mask:radial-gradient(closest-side,#000 0 40%,transparent 72%);
+    mask:radial-gradient(closest-side,#000 0 40%,transparent 72%);
+    animation:spin 26s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- 3-2-1 countdown overlay ---------- */
+  .count{position:fixed;inset:0;z-index:50;display:grid;place-items:center;overflow:hidden;
+    background:var(--ink)}
+  .count .rays{opacity:.32}
+  .count.hidden{display:none}
+  #countNum{position:relative;z-index:1;font-family:var(--disp);line-height:1;
+    font-size:clamp(130px,42vw,360px);color:var(--paper);text-shadow:6px 6px 0 var(--red)}
+  #countNum.go{color:var(--gold);text-shadow:6px 6px 0 var(--red)}
+  .pop{animation:pop .55s cubic-bezier(.2,.9,.2,1)}
+  @keyframes pop{0%{transform:scale(.35) rotate(-6deg);opacity:0}45%{transform:scale(1.1) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+
+  /* =====================================================================
+     AUDIENCE BOARD  (big screen)
+     ===================================================================== */
+  body.board{overflow:hidden}
+  body.board #app{padding:0}
+  #board{display:none;width:100vw;height:100dvh;max-width:none;max-height:none;
+    flex-direction:column;padding:clamp(22px,3.4vw,48px);position:relative;
+    box-shadow:inset 0 0 0 6px var(--ink)}
+  body.board #board{display:flex}
+  body.board .screen:not(#board){display:none !important}
+
+  .b-top{display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;z-index:2;
+    padding:0 150px clamp(10px,1.6vh,20px) 0;border-bottom:4px dashed var(--ink)}
+  .b-brand{display:flex;align-items:center;gap:12px;font-family:var(--disp);text-transform:uppercase;
+    letter-spacing:0;font-size:clamp(22px,3.4vw,40px);color:var(--ink);text-shadow:3px 3px 0 var(--red)}
+  .b-brand .s{font-size:clamp(24px,3.6vw,44px);text-shadow:none}
+  .b-timer{font-family:var(--disp);font-size:clamp(60px,13vw,160px);line-height:.85;color:var(--ink);
+    padding:0 clamp(12px,1.6vw,24px);border:5px solid var(--ink);border-radius:14px;background:var(--paper)}
+  .b-timer.warn{background:var(--gold)}
+  .b-timer.crit{background:var(--red);color:var(--paper);animation:pulse .9s infinite}
+  .b-score{text-align:right;font-family:var(--disp);font-size:clamp(30px,4.6vw,60px);color:var(--teal);
+    text-shadow:2px 2px 0 var(--ink);line-height:.9}
+  .b-score small{display:block;font-family:var(--mono);color:var(--ink2);font-size:.24em;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;text-shadow:none}
+
+  .b-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:clamp(10px,2vh,28px);min-height:0;position:relative}
+  .b-main>:not(.rays){position:relative;z-index:1}
+  .b-run{font-family:var(--mono);color:var(--ink2);font-weight:700;font-size:clamp(15px,2.2vw,28px);
+    letter-spacing:.12em;text-transform:uppercase}
+  .b-run b{color:var(--red)}
+  .b-letter{font-family:var(--disp);font-size:clamp(110px,27vw,320px);line-height:.8;color:var(--red);
+    text-shadow:clamp(4px,1vw,10px) clamp(4px,1vw,10px) 0 var(--ink)}
+  .b-blanks{font-family:var(--disp);font-size:clamp(34px,8vw,96px);letter-spacing:.1em;color:var(--ink);min-height:1em}
+  .b-msg{font-family:var(--disp);text-transform:uppercase;color:var(--ink);font-size:clamp(18px,3vw,34px);text-align:center}
+  .b-final{font-family:var(--disp);font-size:clamp(96px,23vw,260px);line-height:.9;color:var(--teal);
+    text-shadow:clamp(4px,1vw,10px) clamp(4px,1vw,10px) 0 var(--ink)}
+
+  .b-chips{display:flex;gap:clamp(6px,1vw,14px);justify-content:center;flex-wrap:wrap;margin-top:auto;
+    position:relative;z-index:2;padding-top:clamp(12px,2vh,22px)}
+  .chip{flex:1 1 0;min-width:clamp(62px,7vw,120px);max-width:180px;background:var(--paper);
+    border:3px solid var(--ink);border-radius:12px;padding:clamp(8px,1.2vh,15px) 6px;text-align:center;
+    transition:.18s;box-shadow:var(--hard-sm)}
+  .chip .cl{font-family:var(--disp);font-size:clamp(22px,3vw,42px);line-height:1;color:var(--ink)}
+  .chip .cw{font-family:var(--mono);font-weight:700;font-size:clamp(10px,1.1vw,16px);color:var(--ink2);margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip.current{background:var(--gold);transform:translateY(-5px)}
+  .chip.go{background:var(--teal)} .chip.go .cl{color:var(--paper)} .chip.go .cw{color:var(--paper);opacity:.85}
+  .chip.miss{background:var(--red)} .chip.miss .cl{color:var(--paper)} .chip.miss .cw{color:var(--paper);opacity:.85}
+
+  .fsbtn{position:fixed;top:14px;right:14px;z-index:5;background:var(--paper);border:2.5px solid var(--ink);
+    color:var(--ink);border-radius:9px;padding:8px 12px;font-family:var(--mono);font-size:12px;cursor:pointer;
+    box-shadow:var(--hard-sm)}
+  body:not(.board) .fsbtn{display:none}
+</style>
+</head>
+<body>
+<button class="fsbtn" id="fsBtn">⛶ Fullscreen</button>
+<div id="count" class="count hidden"><div class="rays"></div><span id="countNum">3</span></div>
+<div id="app">
+
+  <!-- ============ START (control) ============ -->
+  <section id="start" class="screen">
+    <div class="brand">
+      <span class="kicker">Lightning Round</span>
+      <div class="spark">⚡️</div>
+      <h1>Rapid Fire</h1>
+      <p class="tag">The <b>Password</b>-style party game</p>
+    </div>
+
+    <div class="rules">
+      <h2>How to play</h2>
+      <div class="rule"><span class="n">1</span><div>You are the <b>Clue-Giver</b> — this laptop is your private screen. Put the <b>audience board</b> on the big screen for the guessers.</div></div>
+      <div class="rule"><span class="n">2</span><div>10 words with first letters running <span class="em">in alphabetical order</span>. The board shows the guessers the letter &amp; blanks — never the answer.</div></div>
+      <div class="rule"><span class="n">3</span><div>Describe each word <b>without saying it</b> — no part of the word, spelling, or rhymes.</div></div>
+      <div class="rule"><span class="n">4</span><div>Hit <b>✓ Got it</b>, or <b>Pass</b> to skip — skipped words <b>come back around</b> while the clock runs, so you can return to them.</div></div>
+    </div>
+
+    <div class="opts">
+      <div class="opt">
+        <div class="lab">Timer</div>
+        <div class="seg" id="segTimer">
+          <button data-v="45">45s</button>
+          <button data-v="60" class="on">60s</button>
+          <button data-v="90">90s</button>
+          <button data-v="0">Off</button>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="lab">Difficulty</div>
+        <div class="seg" id="segDiff">
+          <button data-v="std" class="on">Standard <small>(A–P)</small></button>
+          <button data-v="chal">Challenge <small>(inc. Q,X,Y,Z)</small></button>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="lab">Board hint — word length</div>
+        <div class="seg" id="segBlanks">
+          <button data-v="1" class="on">Show blanks</button>
+          <button data-v="0">Hide length</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn">Start round →</button>
+    <button class="btn btn-ghost" id="boardBtn">🖥️ Open audience board ↗</button>
+  </section>
+
+  <!-- ============ PLAY (control) ============ -->
+  <section id="play" class="screen hidden">
+    <div class="topbar">
+      <div class="runlabel link">Letters <b id="runFrom">C</b> → <b id="runTo">L</b>
+        <span class="boarddot" id="boardDot" title="audience board"></span>
+      </div>
+      <div class="timer" id="timer">60</div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="stage">
+      <div class="cardword" id="card">
+        <div class="letter" id="curLetter">C</div>
+        <div class="word" id="curWord">—</div>
+        <div class="idx" id="curIdx">1 of 10</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctrl ctrl-pass" id="passBtn">Pass<small>skip · P or ↓</small></button>
+      <button class="ctrl ctrl-go" id="goBtn">✓ Got it<small>correct · Space</small></button>
+    </div>
+    <button class="endnow" id="endBtn">End round</button>
+  </section>
+
+  <!-- ============ END (control) ============ -->
+  <section id="end" class="screen hidden">
+    <div class="scorewrap">
+      <div class="big"><span id="finalScore">0</span></div>
+      <div class="of">out of 10</div>
+      <div class="scoremsg" id="scoreMsg"></div>
+    </div>
+    <div class="recap" id="recap"></div>
+    <button class="btn btn-primary" id="againBtn">Play again →</button>
+    <div class="footer kbd">Space = Got it · P or ↓ = Pass</div>
+  </section>
+
+  <!-- ============ AUDIENCE BOARD ============ -->
+  <section id="board" class="screen">
+    <div class="b-top">
+      <div class="b-brand"><span class="s">⚡️</span><span>RAPID FIRE</span></div>
+      <div class="b-timer" id="bTimer">60</div>
+      <div class="b-score"><span id="bScore">0</span><small>score</small></div>
+    </div>
+    <div class="b-main">
+      <div class="rays"></div>
+      <div class="b-run" id="bRun"></div>
+      <div class="b-letter" id="bLetter">⚡️</div>
+      <div class="b-blanks" id="bBlanks"></div>
+      <div class="b-final hidden" id="bFinal"></div>
+      <div class="b-msg" id="bMsg">Waiting for the Clue-Giver to start…</div>
+    </div>
+    <div class="b-chips" id="bChips"></div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+
+/* ================= Word bank ================= */
+const BANK = {
+  A:["Apple","Anchor","Arrow","Acorn","Angel","Album","Attic","Avenue","Alarm","Apron","Astronaut","Ankle","Airplane","Airport","Alligator","Almond","Ambulance","Antenna","Antler","Apricot","Aquarium","Arcade","Archer","Arena","Armchair","Armour","Asparagus","Asteroid","Athlete","Atlas","Autumn","Axe"],
+  B:["Bridge","Bottle","Basket","Beacon","Button","Balloon","Blanket","Barrel","Bicycle","Bakery","Bison","Bubble","Badger","Bamboo","Banana","Bandage","Banjo","Barn","Bathtub","Battery","Beaver","Beehive","Beetle","Binoculars","Boomerang","Bouquet","Bracelet","Branch","Brick","Broccoli","Broom","Butterfly"],
+  C:["Candle","Cactus","Camera","Castle","Cabin","Compass","Cricket","Crayon","Curtain","Canyon","Cushion","Cello","Cabbage","Camel","Canoe","Caramel","Carpet","Carrot","Caterpillar","Cathedral","Cauldron","Cave","Chain","Chalk","Chameleon","Chandelier","Cherry","Chimney","Cliff","Clock","Cloud","Crocodile"],
+  D:["Dragon","Diamond","Dinosaur","Drum","Desert","Doctor","Dolphin","Domino","Dagger","Drawer","Dune","Dentist","Daffodil","Daisy","Dandelion","Dartboard","Deer","Desk","Detective","Diary","Dice","Diver","Dock","Doll","Donkey","Doorbell","Dove","Dragonfly","Drill","Duck","Dumpling","Dungeon"],
+  E:["Engine","Earring","Elbow","Envelope","Emerald","Escalator","Eclipse","Easel","Ember","Elephant","Echo","Eyebrow","Ear","Earlobe","Earth","Earthquake","Earthworm","Easter","Eel","Eggplant","Eggshell","Elastic","Elf","Elk","Emu","Entrance","Escape","Espresso","Eucalyptus","Exit","Explorer","Eyelash"],
+  F:["Feather","Furnace","Fountain","Fireworks","Fiddle","Freckle","Forest","Ferry","Fossil","Funnel","Frost","Flute","Factory","Fairy","Fang","Farm","Fawn","Fence","Fern","Finger","Fireplace","Firefly","Fishbowl","Flag","Flamingo","Flipper","Flour","Fork","Fortress","Fox","Fridge","Frog"],
+  G:["Garden","Glacier","Guitar","Gravel","Goblin","Grape","Gutter","Glove","Ginger","Goldfish","Gondola","Galaxy","Garage","Gargoyle","Garlic","Gate","Gazelle","Gecko","Ghost","Giant","Giraffe","Glasses","Globe","Goat","Goggles","Goose","Gorilla","Grapefruit","Grasshopper","Griffin","Grill","Gull"],
+  H:["Harbour","Hammer","Helmet","Helicopter","Hedge","Hammock","Honey","Hyena","Harp","Hangar","Hinge","Hurdle","Hairbrush","Hamburger","Hamster","Handbag","Handle","Hare","Hat","Hawk","Haystack","Headphones","Heart","Hedgehog","Hen","Hero","Hill","Hippo","Hook","Horn","Horse","Hourglass"],
+  I:["Island","Igloo","Iceberg","Insect","Iron","Ivy","Ink","Icicle","Ivory","Iris","Idol","Inchworm","Ibex","Ibis","Ice","Icecream","Icecube","Icing","Iguana","Impala","Incense","Index","Ingot","Inhaler","Inkpot","Inlet","Inn","Instrument","Intestine","Invitation","Iodine","Iceskate"],
+  J:["Jacket","Jungle","Jigsaw","Jewel","Jester","Jelly","Journal","Juggler","Jetty","Jaguar","Jar","Javelin","Jackal","Jackpot","Jam","Janitor","Jaw","Jeans","Jeep","Jellyfish","Jet","Jewellery","Jockey","Joker","Joystick","Judge","Jug","Juice","Jukebox","Jumper","Junction","Jury"],
+  K:["Kettle","Kangaroo","Kayak","Kitten","Kite","Knuckle","Keyboard","Ketchup","Kernel","Kingdom","Knot","Koala","Kale","Karate","Kebab","Keel","Kelp","Kennel","Key","Keyhole","Kidney","Kilt","Kimono","King","Kingfisher","Kiosk","Kitchen","Kiwi","Knee","Knife","Knight","Knob"],
+  L:["Lantern","Ladder","Lion","Lizard","Locket","Lemon","Lighthouse","Ledge","Lobster","Lava","Leopard","Lullaby","Label","Ladle","Ladybird","Lake","Lamb","Lamp","Lampshade","Lane","Laptop","Lasso","Latch","Lawn","Lawnmower","Leaf","Leek","Lettuce","Library","Lily","Lime","Llama"],
+  M:["Marble","Mountain","Magnet","Mermaid","Muffin","Meadow","Mirror","Mummy","Moth","Mango","Motor","Mushroom","Macaroni","Magpie","Mane","Mansion","Map","Maple","Maracas","Marsh","Mask","Mattress","Maze","Medal","Melon","Microphone","Microscope","Milk","Mole","Monkey","Moon","Mosquito"],
+  N:["Needle","Napkin","Nebula","Noodle","Nozzle","Nest","Nurse","Nutmeg","Necklace","Nomad","Notch","Nightingale","Nachos","Nail","Narwhal","Navy","Neck","Nectar","Nectarine","Nephew","Nerve","Net","Nettle","Newspaper","Newt","Niece","Nightclub","Ninja","Noose","Nose","Notebook","Nutcracker"],
+  O:["Orbit","Octopus","Ostrich","Oven","Otter","Oasis","Onion","Orchard","Ornament","Owl","Oyster","Oar","Oak","Oatmeal","Oats","Obelisk","Observatory","Ocean","Octagon","Office","Ogre","Oil","Olive","Omelette","Opal","Opera","Orange","Orangutan","Orchestra","Organ","Origami","Ox"],
+  P:["Puzzle","Pyramid","Penguin","Pillow","Pepper","Parachute","Pigeon","Piano","Pebble","Pumpkin","Pretzel","Prism","Paddle","Padlock","Paintbrush","Palace","Pancake","Panda","Panther","Paperclip","Parrot","Peach","Peacock","Peanut","Pelican","Pencil","Pineapple","Pirate","Platypus","Plough","Puppy","Python"],
+  Q:["Quilt","Queen","Quarry","Quiver","Quill","Quicksand","Quartz","Quarter","Quokka","Quesadilla","Quiche","Quicksilver","Quack","Quadbike","Quadrant","Quail","Quay","Queue","Quicklime","Quintet","Quiz","Quagmire","Quaver","Quinoa","Quadruped"],
+  R:["Rocket","Rainbow","River","Rabbit","Ribbon","Rooster","Radish","Rattle","Reef","Riddle","Robot","Ruler","Radiator","Raft","Railway","Rake","Ram","Ranch","Raspberry","Raven","Razor","Referee","Reindeer","Reptile","Restaurant","Rhino","Rib","Rice","Ring","Road","Rope","Rose"],
+  S:["Sailboat","Snowflake","Spider","Sandwich","Saddle","Scissors","Skeleton","Sponge","Squirrel","Stadium","Satellite","Seashell","Sailor","Sandal","Saucepan","Sausage","Saxophone","Scarecrow","Scarf","Scooter","Scorpion","Screwdriver","Seahorse","Seal","Seaweed","Shark","Sheep","Shovel","Skateboard","Snail","Snowman","Submarine"],
+  T:["Turtle","Tornado","Trumpet","Tunnel","Treasure","Teapot","Thimble","Tractor","Trophy","Tulip","Toaster","Tiger","Table","Tadpole","Tambourine","Tangerine","Tank","Tarantula","Taxi","Telescope","Television","Tent","Thermometer","Thorn","Throne","Thumb","Ticket","Toad","Tomato","Toothbrush","Tortoise","Trampoline"],
+  U:["Umbrella","Unicorn","Ukulele","Uniform","Utensil","Udder","Underdog","Universe","Urchin","Undertow","Upgrade","Umpire","Ufo","Ulcer","Underpants","Undershirt","Underwear","Underworld","Unicycle","Union","Uranium","Urn","Usher","Upstairs"],
+  V:["Volcano","Violin","Village","Vampire","Vault","Vulture","Velvet","Vineyard","Vitamin","Vortex","Vest","Valley","Vacuum","Valve","Van","Vane","Vase","Veal","Vegetable","Vein","Veranda","Vermin","Vessel","Vet","Viaduct","Vine","Viola","Viper","Visor","Volleyball","Volt","Voyage"],
+  W:["Waterfall","Whistle","Wizard","Walrus","Wagon","Windmill","Wallet","Waffle","Wrench","Wreath","Whisker","Willow","Waiter","Wall","Wallpaper","Walnut","Wand","Wardrobe","Warehouse","Wasp","Watch","Watermelon","Weasel","Web","Well","Whale","Wheel","Wheelbarrow","Whip","Whisk","Window","Wolf"],
+  X:["Xylophone","X-ray","Xenon","Xerox","Xylocarp","X-axis","Xoloitzcuintli","Xmas","Xylem","Xebec","Xerus","Xylograph","Xylophonist","Xanthan"],
+  Y:["Yacht","Yarn","Yolk","Yo-yo","Yard","Yeti","Yogurt","Yodel","Yam","Yawn","Yardstick","Yeast","Yak","Yew","Yoke","Yucca","Yogi","Yoga","Yardarm","Yowl"],
+  Z:["Zebra","Zipper","Zombie","Zigzag","Zoo","Zeppelin","Zither","Zodiac","Zephyr","Zinc","Zone","Zit","Zenith","Zest","Zinnia","Zip","Zircon","Ziggurat","Zookeeper","Zoologist"]
+};
+const L = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ================= Sync channel ================= */
+const chan = ("BroadcastChannel" in window) ? new BroadcastChannel("rapid-fire") : null;
+const IS_BOARD = new URLSearchParams(location.search).has("board");
+
+/* =====================================================================
+   BOARD MODE — renders only from messages, holds no game logic
+   ===================================================================== */
+if (IS_BOARD){
+  document.body.classList.add("board");
+  document.title = "Rapid Fire — Board";
+  const $=id=>document.getElementById(id);
+
+  function renderBoard(s){
+    hideCount(); // any real state message means the countdown is over
+    // timer
+    const bt=$("bTimer");
+    if(s.timerOn && s.screen==="play"){ bt.style.display=""; bt.textContent=s.timeLeft;
+      bt.className="b-timer"+(s.timeLeft<=7?" crit":s.timeLeft<=15?" warn":""); }
+    else bt.style.display="none";
+    $("bScore").textContent=s.score;
+
+    const run=$("bRun"),letter=$("bLetter"),blanks=$("bBlanks"),final=$("bFinal"),msg=$("bMsg"),chips=$("bChips");
+
+    if(s.screen==="start"){
+      run.textContent=""; letter.textContent="⚡️"; letter.style.webkitTextFillColor="";
+      blanks.textContent=""; final.classList.add("hidden");
+      msg.textContent="Waiting for the Clue-Giver to start…"; msg.style.display="";
+      chips.innerHTML=""; return;
+    }
+
+    // build chips for the run
+    chips.innerHTML="";
+    s.cells.forEach(c=>{
+      const d=document.createElement("div");
+      d.className="chip "+c.status;
+      const sub = c.word ? c.word : (c.status==="current" && s.blanks ? c.mask : "·");
+      d.innerHTML=`<div class="cl">${c.letter}</div><div class="cw">${sub}</div>`;
+      chips.appendChild(d);
+    });
+
+    if(s.screen==="end"){
+      run.textContent="Round over";
+      letter.style.display="none"; blanks.style.display="none";
+      final.classList.remove("hidden");
+      final.textContent=s.score+" / 10";
+      msg.textContent=s.score===10?"Perfect round! 🏆":s.score>=8?"Sharp shooting! 🎯":s.score>=5?"Solid work. 👏":"Rematch time. 😅";
+      return;
+    }
+
+    // play
+    letter.style.display=""; blanks.style.display=""; final.classList.add("hidden"); msg.style.display="none";
+    run.innerHTML=`Letters <b>${s.from}</b> → <b>${s.to}</b>`;
+    const cur=s.cells.find(c=>c.status==="current");
+    if(cur){ letter.textContent=cur.letter; blanks.textContent = s.blanks ? cur.mask.split("").join(" ") : ""; }
+  }
+
+  chan && chan.addEventListener("message", e=>{
+    if(!e.data) return;
+    if(e.data.type==="state") renderBoard(e.data);
+    else if(e.data.type==="count") paintCount(e.data.n);
+  });
+  // ask control for current state (in case board opened after game started)
+  const hello=()=>chan&&chan.postMessage({type:"hello"});
+  hello(); let n=0; const hi=setInterval(()=>{ if(++n>10) clearInterval(hi); hello(); },400);
+  chan && chan.addEventListener("message", e=>{ if(e.data&&e.data.type==="state") clearInterval(hi); });
+
+  wireFullscreen();
+}
+
+/* =====================================================================
+   CONTROL MODE — the game
+   ===================================================================== */
+else {
+  const $=id=>document.getElementById(id);
+  let cfg={timer:60,diff:"std",blanks:1};
+  let words=[],results=[],cur=0,score=0,tId=null,timeLeft=0,playing=false;
+  let curScreen="start",fromL="C",toL="L";
+
+  function bindSeg(id,key,cast){
+    const seg=$(id);
+    seg.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+      [...seg.children].forEach(c=>c.classList.remove("on"));b.classList.add("on");cfg[key]=cast(b.dataset.v);});
+  }
+  bindSeg("segTimer","timer",Number);
+  bindSeg("segDiff","diff",String);
+  bindSeg("segBlanks","blanks",Number);
+
+  /* ---- broadcast snapshot to the board ---- */
+  function snapshot(){
+    const cells=words.map((w,i)=>{
+      const status=results[i]==="go"?"go":results[i]==="miss"?"miss":(i===cur&&playing?"current":"pending");
+      const cell={letter:w.letter,status,mask:w.word.replace(/[A-Za-z]/g,"_")};
+      if(status==="go"||status==="miss"||curScreen==="end") cell.word=w.word;
+      return cell;
+    });
+    return {type:"state",screen:curScreen,from:fromL,to:toL,timerOn:cfg.timer>0,timeLeft,score,blanks:!!cfg.blanks,cells};
+  }
+  function broadcast(){ chan&&chan.postMessage(snapshot()); }
+  function broadcastCount(n){ chan&&chan.postMessage({type:"count",n}); }
+  chan&&chan.addEventListener("message",e=>{ if(e.data&&e.data.type==="hello"){ setBoardDot(true); broadcast(); }});
+
+  let boardWin=null;
+  function setBoardDot(on){ const d=$("boardDot"); if(d)d.classList.toggle("on",on); }
+  $("boardBtn").onclick=()=>{
+    boardWin=window.open(location.pathname+"?board","rfBoard");
+    $("boardBtn").textContent="🖥️ Board is open — drag it to the big screen";
+    $("boardBtn").classList.add("live");
+    setBoardDot(true);
+    setTimeout(broadcast,300);
+  };
+
+  function buildRound(){
+    const maxStart=cfg.diff==="chal"?16:6;
+    const start=Math.floor(Math.random()*(maxStart+1));
+    words=[];
+    for(let i=0;i<10;i++){const letter=L[start+i];words.push({letter,word:pick(BANK[letter])});}
+    results=Array(10).fill(null);cur=0;score=0;
+    fromL=L[start];toL=L[start+9];
+    $("runFrom").textContent=fromL;$("runTo").textContent=toL;
+  }
+  function renderDots(){
+    const el=$("dots");el.innerHTML="";
+    for(let i=0;i<10;i++){const d=document.createElement("div");
+      d.className="dot"+(results[i]==="go"?" go":results[i]==="miss"?" miss":"")+(i===cur&&playing?" cur":"");
+      el.appendChild(d);}
+  }
+  function showWord(flash){
+    const w=words[cur];
+    $("curLetter").textContent=w.letter;$("curWord").textContent=w.word;$("curIdx").textContent=score+" of 10 solved";
+    const card=$("card");
+    if(flash){card.classList.remove("flash");void card.offsetWidth;card.classList.add("flash");}
+    renderDots();broadcast();
+  }
+  function tickStart(){
+    clearInterval(tId);
+    if(cfg.timer===0){$("timer").style.display="none";return;}
+    $("timer").style.display="";timeLeft=cfg.timer;paintTimer();
+    tId=setInterval(()=>{timeLeft--;paintTimer();broadcast();if(timeLeft<=0){clearInterval(tId);finish();}},1000);
+  }
+  function paintTimer(){
+    const t=$("timer");t.textContent=timeLeft;
+    t.classList.toggle("warn",timeLeft<=15&&timeLeft>7);t.classList.toggle("crit",timeLeft<=7);
+  }
+  function nextUnsolved(from){
+    for(let step=1;step<=10;step++){ const i=(from+step)%10; if(results[i]===null) return i; }
+    return -1; // every word solved
+  }
+  function answer(kind){
+    if(!playing)return;
+    if(kind==="go"){ results[cur]="go"; score++; }   // "miss" here means Pass — no resolution, revisit later
+    const nx=nextUnsolved(cur);
+    if(nx<0){ finish(); return; }                    // all solved → round over
+    cur=nx; showWord(true);
+  }
+  function finish(){
+    playing=false;clearInterval(tId);
+    for(let i=0;i<10;i++) if(results[i]===null) results[i]="miss";
+    curScreen="end";
+    $("finalScore").textContent=score;
+    $("scoreMsg").textContent=score===10?"Perfect round! 🏆":score>=8?"Sharp shooting! 🎯":score>=5?"Solid work. 👏":score>=1?"Warm-up done — go again.":"Rematch time. 😅";
+    const recap=$("recap");recap.innerHTML="";
+    words.forEach((w,i)=>{const go=results[i]==="go";const row=document.createElement("div");
+      row.className="row "+(go?"g":"m");
+      row.innerHTML=`<div class="mk">${go?"✓":"✕"}</div><div class="w">${w.word}</div><div class="l">${w.letter}</div>`;
+      recap.appendChild(row);});
+    swap("end");broadcast();
+  }
+  function startRound(){
+    buildRound();
+    playing=false;curScreen="play";
+    showWord(false);swap("play");     // control lays out the round behind the overlay
+    let n=3;
+    (function step(){
+      paintCount(n);broadcastCount(n);
+      if(n>0){ n--; setTimeout(step,800); }
+      else setTimeout(()=>{ hideCount();playing=true;showWord(false);tickStart();broadcast(); },650);
+    })();
+  }
+  function swap(id){ ["start","play","end"].forEach(s=>$(s).classList.toggle("hidden",s!==id)); if(id!=="play"&&id!=="end") curScreen=id; }
+
+  $("startBtn").onclick=startRound;
+  $("againBtn").onclick=startRound;
+  $("goBtn").onclick=()=>answer("go");
+  $("passBtn").onclick=()=>answer("miss");
+  $("endBtn").onclick=finish;
+
+  document.addEventListener("keydown",e=>{
+    if(!playing)return;
+    if(e.code==="Space"||e.code==="Enter"||e.code==="ArrowRight"){e.preventDefault();answer("go");}
+    else if(e.code==="ArrowDown"||e.key.toLowerCase()==="p"||e.code==="ArrowLeft"){e.preventDefault();answer("miss");}
+  });
+
+  // initial state so a board opened first shows "waiting"
+  curScreen="start"; broadcast();
+}
+
+/* shared: 3-2-1 countdown overlay (used by both windows) */
+function paintCount(n){
+  const el=document.getElementById("count"), num=document.getElementById("countNum");
+  if(!el) return;
+  el.classList.remove("hidden");
+  num.textContent = n>0 ? n : "GO!";
+  num.classList.toggle("go", n===0);
+  num.classList.remove("pop"); void num.offsetWidth; num.classList.add("pop");
+}
+function hideCount(){ const el=document.getElementById("count"); if(el) el.classList.add("hidden"); }
+
+/* shared: fullscreen toggle (used by board) */
+function wireFullscreen(){
+  const btn=document.getElementById("fsBtn");
+  if(!btn)return;
+  btn.onclick=()=>{ if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}
+    else{document.exitFullscreen&&document.exitFullscreen();} };
+}
+</script>
+</body>
+</html>
